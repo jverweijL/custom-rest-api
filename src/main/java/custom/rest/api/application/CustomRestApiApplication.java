@@ -1,12 +1,14 @@
 package custom.rest.api.application;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Set;
+import java.util.*;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Application;
 
+import com.liferay.asset.kernel.model.AssetTag;
+import com.liferay.asset.kernel.service.AssetTagLocalService;
+import com.liferay.asset.kernel.service.AssetTagLocalServiceUtil;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -15,6 +17,7 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author jverweij
@@ -83,6 +86,35 @@ public class CustomRestApiApplication extends Application {
 		return getRequest(request);
 	}
 
+	//http://localhost:8080/o/custom/tags?groupId=20127
+	@GET
+	@Path("/tags")
+	@Produces("text/plain")
+	public String tags(@QueryParam("groupId") long groupId)
+	{
+		System.out.println("Trying to fetch the tags...");
+
+		String result = "[";
+
+		// get distinct values
+		Set<String> temp = new HashSet<String>();
+
+		List<AssetTag> tags = AssetTagLocalServiceUtil.getGroupTags(groupId);
+		for (AssetTag tag : tags) {
+			temp.add(tag.getName());
+		}
+
+		for (String tag : temp) {
+			result += "\"" + tag +  "\",";
+		}
+
+		result = result.substring(0,result.lastIndexOf(',')) + "]";
+
+		System.out.println(tags);
+
+		return result;
+	}
+
 	private String getRequest(HttpUriRequest request) {
 		HttpClient client = HttpClientBuilder.create().build();
 
@@ -99,6 +131,7 @@ public class CustomRestApiApplication extends Application {
 	}
 
 
+	//http://localhost:8080/o/custom/morning
 	@GET
 	@Path("/morning")
 	@Produces("text/plain")
