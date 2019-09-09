@@ -6,9 +6,12 @@ import java.util.*;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Application;
 
+import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetTag;
+import com.liferay.asset.kernel.service.AssetCategoryLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalServiceUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -110,7 +113,38 @@ public class CustomRestApiApplication extends Application {
 
 		result = result.substring(0,result.lastIndexOf(',')) + "]";
 
-		System.out.println(tags);
+		System.out.println(result);
+
+		return result;
+	}
+
+	//http://localhost:8080/o/custom/categories?categoryId=43291
+	@GET
+	@Path("/categories")
+	@Produces("text/plain")
+	public String categories(@QueryParam("categoryId") long categoryId) throws PortalException {
+		System.out.println("Trying to fetch the categories...");
+
+		String result = "[";
+
+		// get distinct values
+		Set<String> temp = new HashSet<String>();
+
+		//AssetCategory category = AssetCategoryLocalServiceUtil.getCategory(categoryId);
+		List<AssetCategory> categories = AssetCategoryLocalServiceUtil.getChildCategories(categoryId);
+
+		//List<AssetTag> tags = AssetTagLocalServiceUtil.getGroupTags(groupId);
+		for (AssetCategory category : categories) {
+			temp.add(category.getName());
+		}
+
+		for (String category : temp) {
+			result += "\"" + category +  "\",";
+		}
+
+		result = result.substring(0,result.lastIndexOf(',')) + "]";
+
+		System.out.println(result);
 
 		return result;
 	}
