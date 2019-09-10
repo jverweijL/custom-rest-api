@@ -151,7 +151,7 @@ public class CustomRestApiApplication extends Application {
 		return result;
 	}
 
-	//http://localhost:8080/o/custom/categories?categoryId=43291
+	//http://localhost:8080/o/custom/categories?categoryId=43291&categoryId=43293
 	@GET
 	@Path("/vocabulary")
 	@Produces("text/plain")
