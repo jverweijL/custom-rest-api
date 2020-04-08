@@ -263,6 +263,7 @@ public class CustomRestApiApplication extends Application {
 			Process uptimeProc = Runtime.getRuntime().exec("uptime");
 			BufferedReader in = new BufferedReader(new InputStreamReader(uptimeProc.getInputStream()));
 			String line = in.readLine();
+			System.out.println ("Current uptime is: " + line);
 			if (line != null) {
 				Pattern parse = Pattern.compile("((\\d+) days,)? (\\d+):(\\d+)");
 				Matcher matcher = parse.matcher(line);
