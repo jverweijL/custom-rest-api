@@ -10,6 +10,9 @@ import java.util.regex.Pattern;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriInfo;
 
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetTag;
@@ -17,8 +20,7 @@ import com.liferay.asset.kernel.service.AssetCategoryLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalServiceUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
+import com.liferay.portal.kernel.util.*;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -39,12 +41,13 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"osgi.jaxrs.application.base=/custom",
 		"osgi.jaxrs.name=Greetings.Rest",
-			"liferay.auth.verifier=false",
-			"liferay.oauth2=false"
+		"liferay.auth.verifier=false",
+		"liferay.oauth2=false"
 	},
 	service = Application.class
 )
 public class CustomRestApiApplication extends Application {
+	String ENDPOINT_PARAM = "endpoint";
 
 	public Set<Object> getSingletons() {
 		return Collections.<Object>singleton(this);
@@ -56,9 +59,28 @@ public class CustomRestApiApplication extends Application {
 		return "It works!";
 	}
 
+	/*
+		Sometimes you need to grab endpoints like https://restcountries.eu/rest/v2/name/netherlands
+		but e.g. Liferay Dataprovider requires params like {HOSTNAME}/o/custom/param2path?endpoint=https://restcountries.eu/rest/v2?name=netherlands
+	 */
+	@GET
+	@Path("/param2path")
+	@Produces("text/plain")
+	public String param2path(@Context UriInfo info) throws IOException {
+		String api = "";
+		for (String param : info.getQueryParameters().keySet()) {
+			if (!param.equalsIgnoreCase(ENDPOINT_PARAM)) {
+				api += "/" + param + "/" + info.getQueryParameters().getFirst(param);
+			}
+		}
+		String apiURL = info.getQueryParameters().getFirst(ENDPOINT_PARAM) + api;
+		System.out.println("Calling " + apiURL);
+		Http.Options options = new Http.Options();
+		options.setLocation(apiURL);
+		return HttpUtil.URLtoString(options);
+	}
 
-
-	// http://localhost:8080/o/custom/adres?postcode=3438dc&huisnummer=3
+	// {HOSTNAME}/o/custom/adres?postcode=3438dc&huisnummer=3
 	@GET
 	@Path("/adres")
 	@Produces("text/plain")
@@ -76,7 +98,6 @@ public class CustomRestApiApplication extends Application {
 				.build();
 
 		return getRequest(request);
-
 	}
 
 	@GET
@@ -215,7 +236,6 @@ public class CustomRestApiApplication extends Application {
 		return "";
 	}
 
-
 	//http://localhost:8080/o/custom/morning
 	@GET
 	@Path("/morning")
@@ -274,7 +294,7 @@ public class CustomRestApiApplication extends Application {
 					int days = _days != null ? Integer.parseInt(_days) : 0;
 					int hours = _hours != null ? Integer.parseInt(_hours) : 0;
 					int minutes = _minutes != null ? Integer.parseInt(_minutes) : 0;
-					uptime = (minutes * 60000) + (hours * 60000 * 60) + (days * 6000 * 60 * 24);
+					uptime = (minutes * 60000) + (hours * 60000 * 60) + (days * 60000 * 60 * 24);
 				}
 			}
 		}
